@@ -4,15 +4,15 @@ This folder holds nginx vhost configs for jayloves.us and friends.
 
 ## Reverse proxy include
 
-Common proxy settings live in `snippets/jayloves-proxy.conf`.
+Common proxy settings live in `sites-available/snippets/jayloves-proxy.conf`.
 
 Usage pattern in each vhost:
 
 ```nginx
 location / {
-    include snippets/upstreams/common.conf;
+    include sites-available/snippets/upstreams/common.conf;
     set $upstream http://$upstream_host:PORT;
-    include snippets/jayloves-proxy.conf;
+    include sites-available/snippets/jayloves-proxy.conf;
 }
 ```
 
@@ -22,12 +22,12 @@ The upstream is defined in a separate include so the internal hostnames do not l
 
 Use a single upstream include shared by all sites:
 
-- `snippets/upstreams/common.conf`
+- `sites-available/snippets/upstreams/common.conf`
 
 This file is intentionally gitignored. Create it on the server by copying the `.example` file and filling in the internal hostname:
 
 ```bash
-cp snippets/upstreams/common.conf.example snippets/upstreams/common.conf
+cp sites-available/snippets/upstreams/common.conf.example sites-available/snippets/upstreams/common.conf
 ```
 
 The file should contain a single line like:
@@ -36,7 +36,7 @@ The file should contain a single line like:
 set $upstream_host INTERNAL_HOST;
 ```
 
-If you deploy this repo to `/etc/nginx`, the include path `snippets/upstreams/*.conf` resolves to `/etc/nginx/snippets/upstreams/*.conf`.
+If you deploy this repo to `/etc/nginx`, the include path `sites-available/snippets/upstreams/*.conf` resolves to `/etc/nginx/sites-available/snippets/upstreams/*.conf`.
 
 ## Certbot: adding a new site
 
