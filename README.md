@@ -1,61 +1,70 @@
 # Nginx Sites (jayloves.us)
 
 This folder holds nginx vhost configs for jayloves.us and friends.
+It is deployed to `/etc/nginx` on the server.
 
-## Reverse proxy include
+## Adding a new domain
 
-Common proxy settings live in `sites-available/snippets/jayloves-proxy.conf`.
+Use `add-domain.sh`:
 
-Usage pattern in each vhost:
-
-```nginx
-location / {
-    include sites-available/snippets/upstreams/common.conf;
-    set $upstream http://$upstream_host:PORT;
-    include sites-available/snippets/jayloves-proxy.conf;
-}
+```bash
+./add-domain.sh <domain> <port>
 ```
 
-The upstream is defined in a separate include so the internal hostnames do not live in git.
+Example:
+
+```bash
+./add-domain.sh schedule.jayloves.us 7073
+```
+
+This script will:
+1. Check for duplicate `server_name` conflicts in the existing nginx config
+2. Create the vhost `.conf` file from the standard template
+3. Add the domain to `regen-certs.sh`
+4. Symlink the config into `/etc/nginx/sites-enabled/`
+5. Test and reload nginx
+6. Run `regen-certs.sh` to expand the shared TLS cert
 
 ## Upstream definitions (not in git)
 
-Use a single upstream include shared by all sites:
+All vhosts share a single upstream host variable defined in:
 
 - `sites-available/snippets/upstreams/common.conf`
 
-This file is intentionally gitignored. Create it on the server by copying the `.example` file and filling in the internal hostname:
+This file is intentionally gitignored. Create it on the server by copying the example:
 
 ```bash
 cp sites-available/snippets/upstreams/common.conf.example sites-available/snippets/upstreams/common.conf
 ```
 
-The file should contain a single line like:
+Set it to the internal Tailscale (or LAN) hostname that backs your services:
 
 ```nginx
 set $upstream_host INTERNAL_HOST;
 ```
 
-If you deploy this repo to `/etc/nginx`, the include path `sites-available/snippets/upstreams/*.conf` resolves to `/etc/nginx/sites-available/snippets/upstreams/*.conf`.
+Each vhost then sets the port:
 
-## Certbot: adding a new site
-
-When you add a new vhost file and want it covered by the shared SAN cert, run:
-
-```bash
-sudo certbot --nginx -d dance.jayloves.us -d chat.jayloves.us -d speedtest.jayloves.us -d gym.jayloves.us -d schedule.jayloves.us
+```nginx
+set $upstream http://$upstream_host:PORT;
 ```
 
-This will expand the existing certificate (or create it if it does not exist).
+If you deploy this repo to `/etc/nginx`, the include path `sites-available/snippets/upstreams/*.conf` resolves to `/etc/nginx/sites-available/snippets/upstreams/*.conf`.
 
-Use the helper script below to keep the list in one place.
+## TLS certificates
 
-## Certbot helper script
-
-Edit `regen-certs.sh` to add/remove domains, then run it:
+All domains share a single SAN cert managed by certbot. The domain list lives in `regen-certs.sh`. To manually regenerate/expand the cert:
 
 ```bash
 ./regen-certs.sh
 ```
 
-If you want to keep certbot from touching the `default` vhost, make sure `default` does not contain real `server_name` entries for your domains, and avoid enabling it in `sites-enabled` for those names.
+`add-domain.sh` calls this automatically when onboarding a new domain.
+
+## Proxy settings
+
+Common reverse proxy settings (timeouts, headers, WebSocket support) live in:
+
+- `sites-available/snippets/jayloves-proxy.conf`
+
+This is included by every vhost and should not need to be edited for new domains.
