@@ -43,7 +43,7 @@ If you deploy this repo to `/etc/nginx`, the include path `sites-available/snipp
 When you add a new vhost file and want it covered by the shared SAN cert, run:
 
 ```bash
-sudo certbot --nginx -d dance.jayloves.us -d chat.jayloves.us -d speedtest.jayloves.us -d gym.jayloves.us
+sudo certbot --nginx -d dance.jayloves.us -d chat.jayloves.us -d speedtest.jayloves.us -d gym.jayloves.us -d schedule.jayloves.us
 ```
 
 This will expand the existing certificate (or create it if it does not exist).

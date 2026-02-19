@@ -3,10 +3,11 @@ set -euo pipefail
 
 # Update this list when you add or remove a domain.
 DOMAINS=(
-  dance.jayloves.us
   chat.jayloves.us
-  speedtest.jayloves.us
+  dance.jayloves.us
   gym.jayloves.us
+  schedule.jayloves.us
+  speedtest.jayloves.us
 )
 
 args=()
