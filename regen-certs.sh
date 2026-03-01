@@ -8,8 +8,8 @@ DOMAINS=(
   gym.jayloves.us
   schedule.jayloves.us
   speedtest.jayloves.us
-  steven.jayloves.us
   stats.dance.jayloves.us
+  steven.jayloves.us
 )
 
 args=()
