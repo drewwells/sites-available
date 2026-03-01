@@ -2,23 +2,30 @@
 set -euo pipefail
 
 usage() {
-    echo "Usage: $0 <domain> <port>"
-    echo "  Example: $0 schedule.jayloves.us 7073"
+    echo "Usage: $0 <domain> <port|upstream_url>"
+    echo "  Port mode example: $0 schedule.jayloves.us 7073"
+    echo "  URL  mode example: $0 steven.jayloves.us 'http://beast.\$tailnet_domain:8080/hosted'"
     exit 1
 }
 
 [[ $# -ne 2 ]] && usage
 
 DOMAIN="$1"
-PORT="$2"
+TARGET="$2"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CONF="$SCRIPT_DIR/${DOMAIN}.conf"
 ENABLED="/etc/nginx/sites-enabled/${DOMAIN}.conf"
 REGEN="$SCRIPT_DIR/regen-certs.sh"
 
-# Validate port is a number
-if ! [[ "$PORT" =~ ^[0-9]+$ ]]; then
-    echo "Error: port must be a number, got '$PORT'"
+if [[ "$TARGET" =~ ^[0-9]+$ ]]; then
+    UPSTREAM_SET_LINE="set \$upstream http://\$upstream_host:${TARGET};"
+elif [[ "$TARGET" =~ ^https?:// ]]; then
+    # Preserve any nginx variable tokens (e.g. $tailnet_domain) in the written config.
+    TARGET_ESCAPED="${TARGET//$/\\$}"
+    UPSTREAM_SET_LINE="set \$upstream ${TARGET_ESCAPED};"
+else
+    echo "Error: second argument must be a numeric port or full upstream URL starting with http:// or https://"
+    echo "Got: '$TARGET'"
     exit 1
 fi
 
@@ -36,7 +43,7 @@ server {
 
     location / {
         include sites-available/snippets/upstreams/common.conf;
-        set \$upstream http://\$upstream_host:${PORT};
+        ${UPSTREAM_SET_LINE}
         include sites-available/snippets/jayloves-proxy.conf;
     }
 

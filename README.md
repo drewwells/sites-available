@@ -8,13 +8,19 @@ It is deployed to `/etc/nginx` on the server.
 Use `add-domain.sh`:
 
 ```bash
-./add-domain.sh <domain> <port>
+./add-domain.sh <domain> <port|upstream_url>
 ```
 
 Example:
 
 ```bash
 ./add-domain.sh schedule.jayloves.us 7073
+```
+
+URL mode example (for path-based/proxied backends):
+
+```bash
+./add-domain.sh steven.jayloves.us 'http://beast.$tailnet_domain:8080/hosted'
 ```
 
 This script will:
@@ -43,10 +49,16 @@ Set it to the internal Tailscale (or LAN) hostname that backs your services:
 set $upstream_host INTERNAL_HOST;
 ```
 
-Each vhost then sets the port:
+Each vhost can set either a port-based upstream:
 
 ```nginx
 set $upstream http://$upstream_host:PORT;
+```
+
+Or a full upstream URL:
+
+```nginx
+set $upstream http://beast.$tailnet_domain:8080/hosted;
 ```
 
 If you deploy this repo to `/etc/nginx`, the include path `sites-available/snippets/upstreams/*.conf` resolves to `/etc/nginx/sites-available/snippets/upstreams/*.conf`.

@@ -1,1 +1,2 @@
 set $upstream_host INTERNAL_HOST;
+set $tailnet_domain YOUR_TAILNET_DOMAIN;
