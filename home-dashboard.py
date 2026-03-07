@@ -23,6 +23,12 @@ NGINX_DIRS = [
 SKIP_PORTS = {22, 25, 53, 80, 443, 8888, 10000}
 SKIP_PORT_BELOW = 1000
 
+# Process names to skip entirely (infrastructure, not browsable services)
+SKIP_PROCESSES = {"tailscaled", "containerd"}
+
+# Friendly name prefixes to skip — Plex sub-processes, etc.
+SKIP_NAME_PREFIXES = ("Plex Tuner", "Plex Plug-in", "Plex Script")
+
 
 def get_docker_port_map():
     """Return {host_port: {"name": container_name, "image": image}} via docker ps."""
@@ -100,8 +106,8 @@ def discover_listeners():
             process = proc_m.group(1)
             pid = proc_m.group(2)
 
-        # Skip rpc.* services and anything with no process info at all
-        if process.startswith("rpc.") or (not process and not pid):
+        # Skip rpc.* services, infrastructure, and anything with no process info at all
+        if process.startswith("rpc.") or process in SKIP_PROCESSES or (not process and not pid):
             continue
 
         # Resolve a friendly name
@@ -124,6 +130,10 @@ def discover_listeners():
         if not friendly or friendly.startswith("pid:"):
             continue
 
+        # Drop known Plex sub-processes and similar infra names
+        if friendly.startswith(SKIP_NAME_PREFIXES):
+            continue
+
         services.append({
             "port": port,
             "process": process,
@@ -133,7 +143,14 @@ def discover_listeners():
             "domain": "",
         })
 
-    return sorted(services, key=lambda s: s["port"])
+    # Deduplicate by friendly name — keep lowest port (e.g. Plex 32400 over 32401)
+    seen_names = {}
+    for svc in sorted(services, key=lambda s: s["port"]):
+        name = svc["friendly"]
+        if name not in seen_names:
+            seen_names[name] = svc
+
+    return sorted(seen_names.values(), key=lambda s: s["port"])
 
 
 def load_nginx_port_map():

@@ -5,8 +5,7 @@ After=home-dashboard.socket
 
 [Service]
 ExecStart=/usr/local/bin/home-dashboard
-StandardInput=socket
-StandardOutput=socket
+StandardOutput=journal
 StandardError=journal
 
 [Install]
