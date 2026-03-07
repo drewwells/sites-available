@@ -1,0 +1,9 @@
+[Unit]
+Description=Home Dashboard Socket (port 80)
+
+[Socket]
+ListenStream=80
+Accept=no
+
+[Install]
+WantedBy=sockets.target

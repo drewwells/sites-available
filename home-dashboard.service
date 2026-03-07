@@ -1,0 +1,13 @@
+[Unit]
+Description=Home Dashboard HTTP Server
+Requires=home-dashboard.socket
+After=home-dashboard.socket
+
+[Service]
+ExecStart=/usr/local/bin/home-dashboard
+StandardInput=socket
+StandardOutput=socket
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
